@@ -1,5 +1,7 @@
 # Marcador de Parejas · Grupo de Vida
 
+**English** · [Español](README.es.md)
+
 A scoreboard for game nights, shown on a TV or projector. It keeps score for two teams (by default **Hombres** and **Mujeres**) across several games. It has a built-in charades game, trivia buzzers on each team's phone, and an iPhone remote so the host can run everything from their hand.
 
 It's three HTML pages plus a small Python server. No installation or build step is needed; the server only uses Python's standard library.
