@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#04050c">
+<title>Timbre de trivia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Outfit:wght@300;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04050c;--text:#f3f5ff;--muted:rgba(225,230,255,.6);--m:#38b6ff;--m2:#5b4bff;--w:#ff3d9a;--w2:#ff7a59;--gold:#ffd46b;--ok:#3ddc84;--bad:#ff5a6e;--c:var(--m);--c2:var(--m2)}
+body.t1{--c:var(--w);--c2:var(--w2)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  display:grid;grid-template-rows:auto 1fr auto;
+  padding:calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 16px);
+  background:radial-gradient(90% 60% at 50% 55%,color-mix(in srgb,var(--c) 22%,transparent),transparent 70%),var(--bg);
+  transition:background .4s;
+}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;touch-action:manipulation}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.team{font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conn{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:99px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);flex:none}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.conn.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+
+.stage{display:grid;place-items:center;align-content:center;gap:28px;min-height:0}
+.btn{
+  position:relative;width:min(78vw,52vh);aspect-ratio:1;border-radius:50%;
+  display:grid;place-items:center;
+  font-family:'Outfit',sans-serif;font-weight:900;font-size:min(13vw,8vh);letter-spacing:.02em;color:#fff;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 40%,#fff) 0%,var(--c) 38%,var(--c2) 100%);
+  box-shadow:0 2.2vh 0 color-mix(in srgb,var(--c2) 60%,#000),0 3vh 8vh color-mix(in srgb,var(--c) 45%,transparent),inset 0 -1.4vh 3vh rgba(0,0,0,.25);
+  transition:transform .06s,box-shadow .06s,filter .3s,opacity .3s;
+}
+.btn::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:3px solid var(--c);opacity:0}
+.btn.pressed{transform:translateY(1.8vh);box-shadow:0 .4vh 0 color-mix(in srgb,var(--c2) 60%,#000),0 1vh 4vh color-mix(in srgb,var(--c) 45%,transparent),inset 0 -1vh 2vh rgba(0,0,0,.25)}
+body.armed .btn::after{animation:ring 1.2s ease-out infinite}
+@keyframes ring{0%{opacity:.9;transform:scale(.92)}100%{opacity:0;transform:scale(1.25)}}
+body.wait .btn,body.locked .btn,body.late .btn{filter:grayscale(.85) brightness(.45)}
+body.first .btn{background:radial-gradient(circle at 35% 30%,#fff7d0 0%,var(--gold) 40%,#c08a1e 100%);box-shadow:0 2.2vh 0 #7a5410,0 0 12vh color-mix(in srgb,var(--gold) 70%,transparent);animation:win .7s ease-in-out infinite alternate;color:#2a1c00}
+@keyframes win{to{transform:scale(1.04)}}
+
+.msg{text-align:center;display:grid;gap:6px;min-height:76px}
+.msg strong{font-family:'Outfit',sans-serif;font-weight:800;font-size:28px;line-height:1.1}
+.msg span{font-size:15px;color:var(--muted);line-height:1.4}
+body.first .msg strong{color:var(--gold)}
+body.late .msg strong,body.locked .msg strong{color:var(--bad)}
+
+.foot{text-align:center;font-size:13px;color:var(--muted)}
+.foot button{text-decoration:underline;color:var(--muted);font-size:13px;padding:8px}
+
+.pick{position:fixed;inset:0;z-index:5;display:none;place-items:center;align-content:center;gap:16px;padding:24px;background:var(--bg)}
+body.picking .pick{display:grid}
+.pick h1{font-family:'Outfit',sans-serif;font-weight:600;font-size:24px;text-align:center;margin-bottom:8px}
+.pick button{width:min(80vw,340px);height:96px;border-radius:22px;font-family:'Outfit',sans-serif;font-weight:800;font-size:26px;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.pick .p0{background:linear-gradient(160deg,var(--m),var(--m2))}
+.pick .p1{background:linear-gradient(160deg,var(--w),var(--w2))}
+
+.flash{position:fixed;inset:0;pointer-events:none;background:var(--gold);opacity:0}
+.flash.go{animation:flash .6s ease-out}
+@keyframes flash{0%{opacity:.6}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="wait">
+<header class="top">
+  <div class="team" id="teamName">Equipo</div>
+  <div class="conn" id="conn"><i></i><span id="connTxt">Conectando</span></div>
+</header>
+
+<main class="stage">
+  <button class="btn" id="btn" aria-label="Presionar timbre">¡YA!</button>
+  <div class="msg" aria-live="assertive"><strong id="msgT">Espera la pregunta</strong><span id="msgS">El botón se activa cuando el presentador abra el timbre.</span></div>
+</main>
+
+<footer class="foot"><button id="change">Cambiar de equipo</button></footer>
+
+<div class="pick">
+  <h1>¿De qué equipo es este teléfono?</h1>
+  <button class="p0" data-team="0" id="p0">Hombres</button>
+  <button class="p1" data-team="1" id="p1">Mujeres</button>
+</div>
+<div class="flash" id="flash"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const qs = new URLSearchParams(location.search);
+const PIN = qs.get('k') || '';
+let team = qs.get('t') === '0' ? 0 : qs.get('t') === '1' ? 1 : null;
+let names = ['Hombres', 'Mujeres'];
+let B = { mode: 'off', winner: null, locked: [], seq: -1 };
+let mine = null; // result of my last press for this question: 'first' | 'late' | null
+let lastQ = -1;
+
+/* sound + wake lock (both need a tap first on iOS) */
+let ac;
+function beep(f1, f2, d = .18, type = 'square', vol = .12) {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + .02);
+  } catch (e) {}
+}
+let wake;
+async function keepAwake() { try { if ('wakeLock' in navigator && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => wake = null); } } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
+
+function setTeam(t) {
+  team = t;
+  const u = new URL(location.href); u.searchParams.set('t', t); history.replaceState(null, '', u);
+  document.body.classList.remove('picking');
+  render();
+}
+
+function render() {
+  const b = document.body;
+  b.classList.toggle('t1', team === 1);
+  $('#teamName').textContent = team === null ? 'Elige equipo' : names[team];
+  $('#p0').textContent = names[0]; $('#p1').textContent = names[1];
+  if (B.q !== lastQ) { mine = null; lastQ = B.q; }
+  let st = 'wait', T = 'Espera la pregunta', S = 'El botón se activa cuando el presentador abra el timbre.';
+  const locked = team !== null && (B.locked || []).includes(team);
+  if (B.mode === 'armed' && !locked) {
+    st = 'armed'; T = '¡Presiona primero!';
+    S = (B.locked || []).length ? 'Rebote: el otro equipo falló. ¡Es su oportunidad!' : 'Toca el botón en cuanto sepas la respuesta.';
+  } else if (B.mode === 'armed' && locked) {
+    st = 'locked'; T = 'Ya respondieron'; S = 'Ahora le toca al otro equipo.';
+  } else if (B.mode === 'buzzed') {
+    if (B.winner === team) { st = 'first'; T = '¡Fueron los primeros!'; S = 'Digan su respuesta en voz alta.'; }
+    else { st = 'late'; T = 'El otro equipo fue más rápido'; S = 'Esperen: si fallan, les toca a ustedes.'; }
+  } else if (B.mode === 'done') {
+    T = 'Pregunta terminada'; S = 'Espera la siguiente pregunta.';
+  } else if (B.mode === 'off') {
+    T = 'Timbre apagado'; S = 'Se activará cuando empiece la trivia.';
+  }
+  ['wait', 'armed', 'locked', 'first', 'late'].forEach(c => b.classList.toggle(c, c === st));
+  $('#btn').textContent = st === 'first' ? '¡1º!' : '¡YA!';
+  $('#msgT').textContent = T; $('#msgS').textContent = S;
+}
+
+async function press() {
+  if (team === null) return;
+  keepAwake();
+  const btn = $('#btn'); btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 140);
+  if (B.mode !== 'armed') { beep(180, 120, .15, 'sine', .1); return; }
+  beep(880, 1320, .12, 'square', .08);
+  try {
+    const r = await fetch('/buzz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ k: PIN, team }), keepalive: true });
+    if (r.status === 403) { $('#msgT').textContent = 'Código incorrecto'; $('#msgS').textContent = 'Escanea de nuevo el QR del timbre en el marcador.'; return; }
+    const { result } = await r.json();
+    mine = result;
+    if (result === 'first') { beep(660, 990, .5, 'triangle', .2); const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); navigator.vibrate?.(200); }
+  } catch (e) {
+    $('#msgT').textContent = 'Sin conexión'; $('#msgS').textContent = 'Revisa que estés en el mismo Wi-Fi que el marcador.';
+  }
+}
+// pointerdown fires on touch start, ~100 ms earlier than click
+$('#btn').addEventListener('pointerdown', e => { e.preventDefault(); press(); });
+$('#change').addEventListener('click', () => document.body.classList.add('picking'));
+document.querySelectorAll('.pick button').forEach(b => b.addEventListener('click', () => { setTeam(+b.dataset.team); keepAwake(); }));
+
+function connect() {
+  const es = new EventSource('/events');
+  es.onopen = () => { $('#conn').classList.add('on'); $('#connTxt').textContent = 'Conectado'; };
+  es.onerror = () => { $('#conn').classList.remove('on'); $('#connTxt').textContent = 'Reconectando'; };
+  es.addEventListener('buzzer', e => {
+    const prev = B; B = JSON.parse(e.data);
+    if (B.mode === 'armed' && prev.mode !== 'armed' && team !== null && !(B.locked || []).includes(team)) beep(520, 780, .15, 'triangle', .1);
+    render();
+  });
+  es.addEventListener('state', e => { try { names = JSON.parse(e.data).teams || names; render(); } catch (err) {} });
+}
+
+if (team === null) document.body.classList.add('picking');
+if (!PIN) { $('#msgT').textContent = 'Falta el código'; $('#msgS').textContent = 'Escanea el QR del timbre desde el marcador (tecla C).'; }
+render();
+connect();
+})();
+</script>
+</body>
+</html>

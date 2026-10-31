@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#04050c">
+<title>Control del marcador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04050c; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.09); --text:#f3f5ff; --muted:rgba(225,230,255,.55);
+  --m:#38b6ff; --m2:#5b4bff; --w:#ff3d9a; --w2:#ff7a59; --gold:#ffd46b; --bad:#ff5a6e;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{
+  min-height:100dvh;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px);
+  background:
+    radial-gradient(70% 40% at 0% 30%,rgba(56,182,255,.14),transparent 70%),
+    radial-gradient(70% 40% at 100% 30%,rgba(255,61,154,.14),transparent 70%),
+    var(--bg);
+  user-select:none;-webkit-user-select:none;
+}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;touch-action:manipulation}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.game small[hidden]{display:none}
+.game small{display:block;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+.game strong{display:block;font-family:'Outfit',sans-serif;font-weight:600;font-size:22px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62vw}
+.conn{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);flex:none}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.conn.on i{background:#3ddc84;box-shadow:0 0 8px #3ddc84}
+
+.teams{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.team{--c:var(--m);--c2:var(--m2);min-width:0;border-radius:20px;padding:14px 10px 10px;background:var(--card);border:1px solid var(--line);display:grid;gap:10px;position:relative;overflow:hidden}
+.team.w{--c:var(--w);--c2:var(--w2)}
+.team.lead{border-color:color-mix(in srgb,var(--c) 60%,transparent);box-shadow:0 0 30px color-mix(in srgb,var(--c) 18%,transparent)}
+.team::before{content:"";position:absolute;left:15%;right:15%;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--c),transparent)}
+.tname{min-width:0;text-align:center;font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.total{text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:56px;line-height:1;font-variant-numeric:tabular-nums;
+  color:#fff;text-shadow:0 0 18px color-mix(in srgb,var(--c) 70%,transparent)}
+.round{text-align:center;font-size:12px;color:var(--muted);margin-top:-4px}
+.round b{color:var(--c)}
+.plus1{
+  height:84px;border-radius:16px;font-family:'Outfit',sans-serif;font-weight:800;font-size:34px;color:#fff;
+  background:linear-gradient(160deg,var(--c),var(--c2));box-shadow:0 8px 24px color-mix(in srgb,var(--c) 35%,transparent),inset 0 1px 0 rgba(255,255,255,.3);
+  transition:transform .08s,filter .15s;
+}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid button{height:52px;border-radius:12px;font-weight:700;font-size:18px;background:rgba(255,255,255,.06);border:1px solid var(--line);transition:transform .08s,background .15s}
+.grid button.minus{color:var(--bad);grid-column:span 2;height:46px;font-size:16px}
+button:active{transform:scale(.95)}
+.plus1:active{filter:brightness(1.2)}
+.grid button:active{background:color-mix(in srgb,var(--c) 30%,transparent)}
+.custom{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.custom input{width:100%;min-width:0;height:44px;-webkit-appearance:none;appearance:none;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);padding:0 10px;font:600 16px 'Inter',sans-serif;outline:none}
+.custom input:focus{border-color:var(--c)}
+.custom button{height:44px;width:44px;padding:0;border-radius:12px;background:rgba(255,255,255,.1);font-weight:700;font-size:14px}
+
+.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.act{min-width:0;padding:0 4px;height:56px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-weight:700;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.act small{font-size:11px;font-weight:500;color:var(--muted);max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act.wide{grid-column:1 / -1}
+.act.gold{height:62px;border:none;color:#1a1200;font-size:17px;background:linear-gradient(100deg,#b8862b,#ffe08a 45%,#d4a443);box-shadow:0 10px 30px rgba(212,164,67,.25)}
+.act.armed{background:#c01d3a;color:#fff;border-color:#ff5a6e}
+.act.gold.armed{background:linear-gradient(100deg,#ff3d9a,#ffd46b);color:#1a1200}
+.act[hidden]{display:none}
+
+.trivia{margin-top:14px;border-radius:20px;padding:14px;background:var(--card);border:1px solid var(--line);display:grid;gap:12px;--c:var(--gold)}
+.trivia.win-0{--c:var(--m)} .trivia.win-1{--c:var(--w)}
+.trivia.buzzed{border-color:var(--c);box-shadow:0 0 30px color-mix(in srgb,var(--c) 25%,transparent)}
+.tv-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tv-head strong{font-family:'Outfit',sans-serif;font-weight:600;font-size:18px}
+.tv-head span{font-size:12px;font-weight:600;color:var(--muted)}
+.tv-status{text-align:center;padding:14px 8px;border-radius:14px;background:rgba(255,255,255,.04);display:grid;gap:4px}
+.tv-status b{font-family:'Outfit',sans-serif;font-weight:800;font-size:24px;color:var(--c);line-height:1.15}
+.tv-status small{font-size:13px;color:var(--muted)}
+.pts{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.pts span{margin-right:auto}
+.pts button{width:40px;height:36px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-weight:700}
+.pts button.on{background:var(--gold);color:#1a1200;border-color:var(--gold)}
+.tv-btns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.act.ok{background:rgba(61,220,132,.16);border-color:rgba(61,220,132,.5);color:#7ff0b0;height:64px;font-size:17px}
+.act.no{background:rgba(255,90,110,.14);border-color:rgba(255,90,110,.5);color:#ff98a6;height:64px;font-size:17px}
+.act:disabled{opacity:.3}
+.chr{margin-bottom:14px;border-radius:20px;padding:14px;background:var(--card);border:1px solid var(--line);display:grid;gap:12px;--c:var(--m);--c2:var(--m2)}
+.chr.t1{--c:var(--w);--c2:var(--w2)}
+.chr.live{border-color:var(--c);box-shadow:0 0 30px color-mix(in srgb,var(--c) 22%,transparent)}
+.chr-open{height:58px;border-radius:16px;font-weight:700;font-size:16px;background:linear-gradient(100deg,color-mix(in srgb,var(--m) 30%,transparent),color-mix(in srgb,var(--w) 30%,transparent));border:1px solid var(--line)}
+.chr-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chr-head strong{font-family:'Outfit',sans-serif;font-weight:600;font-size:18px}
+.chr-head span{font-size:12px;font-weight:600;color:var(--muted)}
+.chr-status{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.04)}
+.chr-time{font-family:'Outfit',sans-serif;font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;min-width:62px;text-align:center}
+.chr.urgent .chr-time{color:var(--bad)}
+.chr-word{text-align:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;line-height:1.15;color:#fff;word-break:break-word}
+.chr-word small{display:block;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--muted);margin-top:2px}
+.chr-hits{display:grid;justify-items:center;font-size:11px;color:var(--muted)}
+.chr-hits b{font-family:'Outfit',sans-serif;font-size:30px;line-height:1;color:var(--c)}
+.chr-play{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:10px}
+.chr-play .act{height:92px;font-size:20px}
+.chr-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.chr-row .act{height:48px;font-size:13px}
+.chr-start{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.chr-start button{height:64px;border-radius:16px;font-weight:800;font-size:16px;color:#fff}
+.chr-start .s0{background:linear-gradient(160deg,var(--m),var(--m2))}
+.chr-start .s1{background:linear-gradient(160deg,var(--w),var(--w2))}
+.chr-start button.next{box-shadow:0 0 0 3px var(--gold)}
+.dur{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.dur span{width:100%}
+.dur button{min-width:48px;height:36px;padding:0 8px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-weight:700}
+.dur button.on{background:var(--gold);color:#1a1200;border-color:var(--gold)}
+.dur input{width:76px;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);padding:0 8px;font:600 16px 'Inter',sans-serif;outline:none}
+[hidden]{display:none!important}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translate(-50%,120px);background:rgba(20,22,34,.95);border:1px solid var(--line);
+  padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;transition:transform .35s cubic-bezier(.16,1,.3,1);z-index:9;max-width:90vw;text-align:center}
+.toast.show{transform:translate(-50%,0)}
+.flash{animation:flash .5s}
+@keyframes flash{0%{box-shadow:0 0 0 2px var(--c),0 0 40px var(--c)}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="game"><small id="gNum">Juego 1</small><strong id="gName">Conectando…</strong></div>
+  <div class="conn" id="conn"><i></i><span id="connTxt">Sin conexión</span></div>
+</header>
+
+<section class="chr" id="chr">
+  <button class="chr-open" data-ch="ch_open" id="chrOpen">🎭 Abrir Charadas</button>
+  <div id="chrPanel" hidden style="display:grid;gap:12px">
+    <div class="chr-head"><strong>Charadas</strong><span id="chrLeft"></span></div>
+    <div class="chr-status">
+      <div class="chr-time" id="chrTime">60</div>
+      <div class="chr-word" id="chrWord">Listos</div>
+      <div class="chr-hits"><b id="chrHits">0</b>aciertos</div>
+    </div>
+    <div class="chr-play" id="chrPlay">
+      <button class="act no" data-ch="ch_skip">Pasar</button>
+      <button class="act ok" data-ch="ch_hit">✓ Adivinaron</button>
+    </div>
+    <div class="chr-row" id="chrRow">
+      <button class="act" data-ch="ch_pause" id="chrPause">Pausa</button>
+      <button class="act" data-ch="ch_undo">Quitar acierto</button>
+      <button class="act" data-ch="ch_end">Terminar turno</button>
+    </div>
+    <div class="chr-start" id="chrStart">
+      <button class="s0" data-ch="ch_start" data-team="0" id="chrS0">▶ Hombres</button>
+      <button class="s1" data-ch="ch_start" data-team="1" id="chrS1">▶ Mujeres</button>
+    </div>
+    <div class="dur" id="chrDur"><span>Tiempo por turno</span>
+      <button data-dur="30">30 s</button><button data-dur="45">45 s</button><button data-dur="60">60 s</button><button data-dur="90">90 s</button><button data-dur="120">2 min</button>
+      <input type="text" inputmode="numeric" id="chrDurIn" placeholder="seg"><button data-dur="custom">OK</button>
+    </div>
+    <button class="act" data-ch="ch_close" id="chrClose">Cerrar charadas</button>
+  </div>
+</section>
+
+<main class="teams">
+  <section class="team m" data-team="0">
+    <div class="tname" id="n0">Hombres</div>
+    <div class="total" id="t0">0</div>
+    <div class="round">este juego <b id="r0">0</b></div>
+    <button class="plus1" data-n="1">+1</button>
+    <div class="grid">
+      <button data-n="2">+2</button><button data-n="3">+3</button>
+      <button data-n="5">+5</button><button data-n="10">+10</button>
+      <button class="minus" data-n="-1">−1</button>
+    </div>
+    <div class="custom"><input type="text" inputmode="numeric" placeholder="Otro"><button data-custom aria-label="Sumar">OK</button></div>
+  </section>
+  <section class="team w" data-team="1">
+    <div class="tname" id="n1">Mujeres</div>
+    <div class="total" id="t1">0</div>
+    <div class="round">este juego <b id="r1">0</b></div>
+    <button class="plus1" data-n="1">+1</button>
+    <div class="grid">
+      <button data-n="2">+2</button><button data-n="3">+3</button>
+      <button data-n="5">+5</button><button data-n="10">+10</button>
+      <button class="minus" data-n="-1">−1</button>
+    </div>
+    <div class="custom"><input type="text" inputmode="numeric" placeholder="Otro"><button data-custom aria-label="Sumar">OK</button></div>
+  </section>
+</main>
+
+<section class="actions">
+  <button class="act wide" data-act="newgame" id="newBtn">Empezar nuevo juego<small id="nextTxt"></small></button>
+  <button class="act" data-act="undo">Deshacer</button>
+  <button class="act" data-act="theme">Estilo<small id="themeTxt"></small></button>
+  <button class="act" data-act="sound" id="soundBtn">Sonido</button>
+  <button class="act wide" data-act="close" id="closeBtn" hidden>Volver al marcador</button>
+  <button class="act wide gold" data-act="finale" id="finaleBtn">🏆 Revelar al ganador</button>
+</section>
+
+<section class="trivia" id="trivia">
+  <div class="tv-head"><strong>Timbre de trivia</strong><span id="bzQ"></span></div>
+  <div class="tv-status"><b id="bzT">Timbre apagado</b><small id="bzS">Toca “Nueva pregunta” para activar los timbres.</small></div>
+  <div class="pts"><span>Puntos por acierto</span><button data-pts="1">1</button><button data-pts="2">2</button><button data-pts="3">3</button><button data-pts="5">5</button></div>
+  <div class="tv-btns">
+    <button class="act ok" data-bz="buzz_right" id="bzRight" disabled>✓ Correcto</button>
+    <button class="act no" data-bz="buzz_wrong" id="bzWrong" disabled>✗ Incorrecto</button>
+    <button class="act wide" data-bz="buzz_open" id="bzOpen">Nueva pregunta</button>
+    <button class="act wide" data-bz="buzz_off" id="bzOff">Cerrar timbre</button>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const PIN = new URLSearchParams(location.search).get('k') || '';
+const THEME_NAMES = { luxe: 'Noche Luxe', gala: 'Gala Dorada', estadio: 'Estadio' };
+let S = null, BZ = { mode: 'off', locked: [], pts: 1 };
+
+let toastT;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+async function send(cmd) {
+  try {
+    const r = await fetch('/cmd', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ k: PIN }, cmd)) });
+    if (r.status === 403) toast('El código no coincide. Vuelve a escanear el QR del marcador.');
+    else if (!r.ok) toast('El marcador no respondió. Intenta otra vez.');
+  } catch (e) {
+    toast('Sin conexión con el marcador. Revisa que estés en el mismo Wi-Fi.');
+  }
+}
+
+function render() {
+  if (!S) return;
+  const num = `Juego ${S.gi + 1}`;
+  $('#gNum').textContent = num;
+  $('#gNum').hidden = S.game === num;
+  $('#gName').textContent = S.game;
+  [0, 1].forEach(i => {
+    $('#n' + i).textContent = S.teams[i];
+    $('#t' + i).textContent = S.totals[i];
+    $('#r' + i).textContent = (S.cur[i] > 0 ? '+' : '') + S.cur[i];
+  });
+  const L = S.totals[0] > S.totals[1] ? 0 : S.totals[1] > S.totals[0] ? 1 : -1;
+  document.querySelectorAll('.team').forEach((el, i) => el.classList.toggle('lead', L === i));
+  $('#nextTxt').textContent = S.next ? `Sigue: ${S.next}` : '';
+  $('#themeTxt').textContent = THEME_NAMES[S.theme] || '';
+  $('#soundBtn').textContent = S.sound ? 'Sonido: sí' : 'Sonido: no';
+  $('#closeBtn').hidden = !S.finale;
+  $('#finaleBtn').hidden = !!S.finale;
+}
+
+function renderCh() {
+  const c = S && S.ch; if (!c) return;
+  const box = $('#chr'), tm = i => S.teams[i];
+  $('#chrOpen').hidden = c.open;
+  $('#chrPanel').hidden = !c.open;
+  box.classList.toggle('t1', c.team === 1);
+  const live = c.phase === 'running' || c.phase === 'paused', idle = c.phase === 'ready' || c.phase === 'over';
+  box.classList.toggle('live', live);
+  box.classList.toggle('urgent', live && c.secs <= 10);
+  $('#chrLeft').textContent = `${c.left} palabras en el mazo`;
+  $('#chrTime').textContent = c.secs;
+  $('#chrHits').textContent = c.hits;
+  const w = $('#chrWord');
+  if (live) w.innerHTML = `${esc(c.word)}<small>Turno de ${esc(tm(c.team))}${c.phase === 'paused' ? ' · en pausa' : ''}</small>`;
+  else if (c.phase === 'countdown') w.innerHTML = `3, 2, 1…<small>Turno de ${esc(tm(c.team))}</small>`;
+  else if (c.phase === 'over') w.innerHTML = `¡Tiempo!<small>${esc(tm(c.team))}: ${c.hits} ${c.hits === 1 ? 'acierto' : 'aciertos'}</small>`;
+  else w.innerHTML = `Listos<small>Elige qué equipo juega</small>`;
+  $('#chrPlay').hidden = !live; $('#chrRow').hidden = !live;
+  $('#chrStart').hidden = !idle; $('#chrDur').hidden = !idle;
+  $('#chrPause').textContent = c.phase === 'paused' ? 'Continuar' : 'Pausa';
+  $('#chrS0').textContent = `▶ ${tm(0)}`; $('#chrS1').textContent = `▶ ${tm(1)}`;
+  const next = c.phase === 'over' ? 1 - c.team : c.team;
+  $('#chrS0').classList.toggle('next', next === 0); $('#chrS1').classList.toggle('next', next === 1);
+  document.querySelectorAll('#chrDur [data-dur]').forEach(b => b.classList.toggle('on', +b.dataset.dur === c.dur));
+}
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+
+function renderBuzz() {
+  const tm = i => (S && S.teams[i]) || (i ? 'Mujeres' : 'Hombres');
+  const box = $('#trivia'), locked = BZ.locked || [];
+  box.classList.toggle('buzzed', BZ.mode === 'buzzed');
+  box.classList.toggle('win-0', BZ.mode === 'buzzed' && BZ.winner === 0);
+  box.classList.toggle('win-1', BZ.mode === 'buzzed' && BZ.winner === 1);
+  $('#bzQ').textContent = BZ.q ? `Pregunta ${BZ.q}` : '';
+  let T = 'Timbre apagado', Sx = 'Toca “Nueva pregunta” para activar los timbres.';
+  if (BZ.mode === 'armed') {
+    T = locked.length ? `Rebote: solo ${tm(1 - locked[0])}` : 'Esperando…';
+    Sx = locked.length ? `${tm(locked[0])} falló. El otro equipo puede presionar.` : 'Lee la pregunta. Los timbres ya están activos.';
+  } else if (BZ.mode === 'buzzed') {
+    T = `${tm(BZ.winner)} presionó primero`; Sx = 'Escucha su respuesta y marca si es correcta.';
+  } else if (BZ.mode === 'done') {
+    T = BZ.event === 'right' ? `¡Punto para ${tm(BZ.winner)}!` : 'Nadie acertó';
+    Sx = 'Toca “Nueva pregunta” para la siguiente.';
+  }
+  $('#bzT').textContent = T; $('#bzS').textContent = Sx;
+  $('#bzRight').disabled = $('#bzWrong').disabled = BZ.mode !== 'buzzed';
+  $('#bzRight').textContent = `✓ Correcto +${BZ.pts}`;
+  $('#bzOpen').textContent = BZ.mode === 'off' ? 'Activar timbre · Pregunta 1' : 'Nueva pregunta';
+  $('#bzOff').hidden = BZ.mode === 'off';
+  document.querySelectorAll('[data-pts]').forEach(b => b.classList.toggle('on', +b.dataset.pts === BZ.pts));
+}
+
+function connect() {
+  const es = new EventSource('/events');
+  es.onopen = () => { $('#conn').classList.add('on'); $('#connTxt').textContent = 'Conectado'; };
+  es.onerror = () => { $('#conn').classList.remove('on'); $('#connTxt').textContent = 'Reconectando'; };
+  es.addEventListener('state', e => { S = JSON.parse(e.data); render(); renderBuzz(); renderCh(); });
+  es.addEventListener('buzzer', e => { BZ = JSON.parse(e.data); renderBuzz(); });
+}
+
+// two-tap confirm for actions that are visible to the whole room
+const armed = {};
+function confirmTap(btn, key, label, fn) {
+  if (armed[key]) { clearTimeout(armed[key]); armed[key] = 0; btn.classList.remove('armed'); btn.firstChild.textContent = label; fn(); return; }
+  btn.classList.add('armed'); btn.firstChild.textContent = 'Toca otra vez para confirmar';
+  armed[key] = setTimeout(() => { armed[key] = 0; btn.classList.remove('armed'); btn.firstChild.textContent = label; }, 3000);
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const team = b.closest('.team');
+  if (team && b.dataset.n) {
+    const n = +b.dataset.n;
+    send({ action: 'add', team: +team.dataset.team, n });
+    team.classList.remove('flash'); void team.offsetWidth; team.classList.add('flash');
+    return;
+  }
+  if (team && 'custom' in b.dataset) {
+    const inp = team.querySelector('input'), n = parseInt(inp.value, 10);
+    if (n) send({ action: 'add', team: +team.dataset.team, n });
+    inp.value = ''; inp.blur();
+    return;
+  }
+  if (b.dataset.ch) { send(b.dataset.team ? { action: b.dataset.ch, team: +b.dataset.team } : { action: b.dataset.ch }); return; }
+  if (b.dataset.dur) {
+    const inp = $('#chrDurIn'), n = b.dataset.dur === 'custom' ? parseInt(inp.value, 10) : +b.dataset.dur;
+    if (n) send({ action: 'ch_dur', n });
+    inp.value = ''; inp.blur(); return;
+  }
+  if (b.dataset.pts) { send({ action: 'buzz_pts', n: +b.dataset.pts }); return; }
+  if (b.dataset.bz) { send({ action: b.dataset.bz }); return; }
+  const act = b.dataset.act; if (!act) return;
+  if (act === 'newgame') return confirmTap(b, act, 'Empezar nuevo juego', () => send({ action: 'newgame' }));
+  if (act === 'finale') return confirmTap(b, act, '🏆 Revelar al ganador', () => send({ action: 'finale' }));
+  send({ action: act });
+});
+
+if (!PIN) toast('Falta el código. Escanea el QR desde el panel del marcador (tecla C).');
+renderBuzz();
+connect();
+})();
+</script>
+</body>
+</html>
